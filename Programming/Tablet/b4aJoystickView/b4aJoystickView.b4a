@@ -1,0 +1,100 @@
+﻿Build1=Default,tech.swiper
+File1=main.bal
+FileGroup1=Default Group
+Group=Default Group
+Library1=core
+Library2=joystickview
+Library3=network
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="5" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~SetApplicationAttribute(android:theme, “@android:style/Theme.DeviceDefault.Light”)~\n~'End of default text.~\n~
+Module1=Starter
+NumberOfFiles=1
+NumberOfLibraries=3
+NumberOfModules=1
+Version=13
+@EndOfDesignText@
+#Region  Project Attributes 
+	#ApplicationLabel: JoystickView
+	#VersionCode: 1
+	#VersionName: 
+	'SupportedOrientations possible values: unspecified, landscape or portrait.
+	#SupportedOrientations: portrait
+	#CanInstallToExternalStorage: False
+	'original resorce: https://github.com/zerokol/JoystickView'
+	
+	'Add upd function - 2025.feb - ZX'
+#End Region
+
+#Region  Activity Attributes 
+	#FullScreen: False
+	#IncludeTitle: True
+#End Region
+
+Sub Process_Globals
+	'Global variables accessible across modules
+	Dim UDP As UDPSocket
+	Dim RPiIP As String = "192.168.1.100" ' Default Raspberry Pi IP address
+	Dim RPiPort As Int = 5000 ' Set your target port
+End Sub
+
+Sub Globals
+	'Global variables for UI elements
+	Private jsv1 As JoystickView
+	Private l4 As Label
+	Private l5 As Label
+	Private l6 As Label
+	Private txtRPiIP As EditText
+	Private btnSetIP As Button
+	Private udpPort As EditText
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	Activity.LoadLayout("main")
+
+	jsv1.ButtonColor = Colors.White
+	jsv1.MainCircleColor = Colors.Black
+	jsv1.SecondaryCircleColor = Colors.Gray
+	jsv1.SecondaryCircleStrokeWidth = 3
+	jsv1.HorizontalLineColor = Colors.Green
+	jsv1.HorizontalLineStrokeWidth = 4
+	jsv1.VerticalLineColor = Colors.Green
+	jsv1.VerticalLineStrokeWidth = 8
+
+	If FirstTime Then
+		UDP.Initialize("UDP", 0, 8000)
+	End If
+
+End Sub
+
+Sub Activity_Resume
+
+End Sub
+
+Sub Activity_Pause (UserClosed As Boolean)
+
+End Sub
+
+Sub MapAngle(angle As Int) As Int
+	If angle < 0 Then
+		Return 360 + angle
+	Else
+		Return angle
+	End If
+End Sub
+
+Sub jsv1_value_changed(angle As Int, powr As Int, direc As Int)
+	Dim mapped_angle As Int = MapAngle(angle) ' Correctly map angle
+
+	l4.Text = mapped_angle
+	l5.Text = powr
+	l6.Text = direc
+
+	Dim msg As String = mapped_angle & "," & powr
+	Dim packet As UDPPacket
+	packet.Initialize(msg.GetBytes("UTF8"), RPiIP, RPiPort)
+	UDP.Send(packet)
+End Sub
+
+Sub btnSetIP_Click
+	RPiIP = txtRPiIP.Text
+	RPiPort = udpPort.Text
+End Sub
