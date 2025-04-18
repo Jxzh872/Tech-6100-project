@@ -1,0 +1,25 @@
+--release
+--output
+D:\Project\program\Tablet\Swiper App\Objects
+--lib
+C:\Android\platforms\android-34\android.jar
+--min-api
+21
+C:\Android\tools\..\extras\b4a_local\unpacked-b4ashared-63860276976000\dex_v1\b4ashared.zip
+c:\android\tools\..\extras\b4a_remote\androidx\multidex\multidex\2.0.1\unpacked-multidex-2.0.1\jars\classes.zip
+C:\Android\tools\..\extras\b4a_local\unpacked-core-63860276976000\dex_v1\core.zip
+C:\Android\tools\..\extras\b4a_local\unpacked-network-63860276976000\dex_v1\network.zip
+C:\Android\tools\..\extras\b4a_local\unpacked-joystickview-63880334490006\dex_v1\joystickview.zip
+D:\Project\program\Tablet\Swiper App\Objects\dexed\tech\swiper\v1\starter$1.dex
+D:\Project\program\Tablet\Swiper App\Objects\dexed\tech\swiper\v1\starter$2.dex
+D:\Project\program\Tablet\Swiper App\Objects\dexed\tech\swiper\v1\starter$starter_BR.dex
+D:\Project\program\Tablet\Swiper App\Objects\dexed\tech\swiper\v1\R.dex
+D:\Project\program\Tablet\Swiper App\Objects\dexed\tech\swiper\v1\R$drawable.dex
+D:\Project\program\Tablet\Swiper App\Objects\dexed\tech\swiper\v1\starter.dex
+D:\Project\program\Tablet\Swiper App\Objects\dexed\tech\swiper\v1\main$B4AMenuItemsClickListener.dex
+D:\Project\program\Tablet\Swiper App\Objects\dexed\tech\swiper\v1\main.dex
+D:\Project\program\Tablet\Swiper App\Objects\dexed\tech\swiper\v1\main$1.dex
+D:\Project\program\Tablet\Swiper App\Objects\dexed\tech\swiper\v1\main$ResumeMessage.dex
+D:\Project\program\Tablet\Swiper App\Objects\dexed\tech\swiper\v1\main$WaitForLayout.dex
+D:\Project\program\Tablet\Swiper App\Objects\dexed\tech\swiper\v1\main$HandleKeyDelayed.dex
+D:\Project\program\Tablet\Swiper App\Objects\dexed\tech\swiper\v1\designerscripts\LS_main.dex

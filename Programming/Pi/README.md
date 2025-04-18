@@ -1,1 +1,4 @@
-This for inital set up and testing the raise mechanical function.
+Robot manual mode control:
+movment
+lifting platform
+gripper

@@ -1,0 +1,239 @@
+﻿Build1=Default,tech.swiper.v1
+File1=images.bmp
+File2=main.bal
+FileGroup1=Default Group
+FileGroup2=Default Group
+Group=Default Group
+Library1=core
+Library2=network
+Library3=joystickview
+ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: http://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="5" android:targetSdkVersion="14"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>~\n~<uses-permission android:name="android.permission.INTERNET"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~~\n~'SetApplicationAttribute(android:theme, "@android:style/Theme.Holo")'~\n~'End of default text.~\n~
+Module1=Starter
+NumberOfFiles=2
+NumberOfLibraries=3
+NumberOfModules=1
+Version=13
+@EndOfDesignText@
+#Region  Project Attributes 
+    #ApplicationLabel: Swiper_GUI
+    #VersionCode: 1
+    #VersionName: 
+    #SupportedOrientations: unspecified
+    #CanInstallToExternalStorage: False
+	'original resource: https://www.b4x.com/android/forum/threads/joystickview-a-joystick-for-gamers.63185/
+    'Add upd function - 2025.feb - ZX
+	'add webview - 2025.march - Brendan
+	'allows to manually control the "swiper" robot' 2025.march - ZX
+	'This program is strictly my own work. Any material
+	'beyond course learning materials that Is taken from
+	'the Web Or other sources Is properly cited, giving
+	'credit To the original author(s).
+#End Region
+
+#Region  Activity Attributes 
+    #FullScreen: True
+    #IncludeTitle: True
+#End Region
+
+Sub Process_Globals
+	Dim UDP As UDPSocket
+	Dim RPiIP As String = "192.168.0.116"
+	Dim RPiPort As Int = 5000
+	Dim tmrLift As Timer
+	Dim tmrRotate As Timer
+	Dim currentLiftCommand As String = ""
+	Dim isLifting As Boolean = False ' Flag to track if lifting is in progress
+	Dim isRotating As Boolean = False ' Flag to track if rotating is in progress
+End Sub
+
+'UI elements and variables only used within designer
+Sub Globals
+	Private jsv1 As JoystickView
+	Private l4 As Label
+	Private l5 As Label
+	Private txtRPiIP As EditText
+	Private btnSetIP As Button
+	Private udpPort As EditText
+	Private toggleGripper As ToggleButton
+	Private rot_value As Int = 0
+	Private cameraStreamView As WebView
+	Private reload_web As Button
+End Sub
+
+Sub Activity_Create(FirstTime As Boolean)
+	Activity.LoadLayout("main")
+    
+	' Set custom background drawable for ON and OFF states
+	If toggleGripper.Checked Then
+		toggleGripper.Background = CreateCustomDrawable(0xFFFFEA8B)  ' ON state
+	Else
+		toggleGripper.Background = CreateCustomDrawable(0xFF0644A5)  ' OFF state
+	End If
+	
+	' Joystick setup
+	jsv1.ButtonColor = 0xFFFFEA8B
+	jsv1.MainCircleColor = Colors.Black
+	jsv1.SecondaryCircleColor = 0xFFB35513
+	jsv1.SecondaryCircleStrokeWidth = 3
+	jsv1.HorizontalLineColor = 0xFFB35513
+	jsv1.HorizontalLineStrokeWidth = 5
+	jsv1.VerticalLineColor = 0xFFB35513
+	jsv1.VerticalLineStrokeWidth = 5
+
+	'Initialize networking and timers once
+	If FirstTime Then
+		UDP.Initialize("UDP", 0, 8000)
+		tmrLift.Initialize("tmrLift", 200) ' 200ms interval
+		tmrRotate.Initialize("tmrRotate", 100) ' 100ms interval for rotate
+		tmrLift.Enabled = False
+		tmrRotate.Enabled = False
+	End If
+End Sub
+
+' Function to create a custom ColorDrawable for toggle button
+Sub CreateCustomDrawable(color As Int) As ColorDrawable
+	Dim cd As ColorDrawable
+	cd.Initialize(color, 20dip) ' Color and corner radius
+	Return cd
+End Sub
+
+Sub jsv1_value_changed(angle As Int, powr As Int, direc As Int)
+	Dim mapped_angle As Int
+	mapped_angle = MapAngle(angle)
+	l4.Text = mapped_angle
+	l5.Text = powr
+	SendUDP(mapped_angle & "," & powr & "," & rot_value)
+End Sub
+
+'Converts negative angles to 0–360 format
+Sub MapAngle(angle As Int) As Int
+	If angle < 0 Then
+		Return 360 + angle
+	Else
+		Return angle
+	End If
+End Sub
+
+Sub LeftRot_Down
+	If isRotating Then Return ' If lifting is in progress, ignore rotation
+	rot_value = -50
+	SendUDP(GetCurrentJoystickUDP) ' Send immediately on button press
+	tmrRotate.Enabled = True ' Start the timer when button is pressed down
+	isRotating = True ' Set the rotating flag to true
+End Sub
+
+Sub LeftRot_Up
+	rot_value = 0
+	SendUDP(GetCurrentJoystickUDP)
+	tmrRotate.Enabled = False ' Stop the timer when button is released
+	isRotating = False ' Set the rotating flag to false
+End Sub
+
+Sub Rightrot_Down
+	If isRotating Then Return ' If lifting is in progress, ignore rotation
+	rot_value = 50
+	SendUDP(GetCurrentJoystickUDP) ' Send immediately on button press
+	tmrRotate.Enabled = True ' Start the timer when button is pressed down
+	isRotating = True ' Set the rotating flag to true
+End Sub
+
+Sub Rightrot_Up
+	rot_value = 0
+	SendUDP(GetCurrentJoystickUDP)
+	tmrRotate.Enabled = False ' Stop the timer when button is released
+	isRotating = False ' Set the rotating flag to false
+End Sub
+
+Sub btnLiftUp_Down
+	If isLifting Then Return ' If rotating is in progress, ignore lifting
+	currentLiftCommand = "Lift Up"
+	SendUDP(currentLiftCommand) ' Send immediately on button press
+	tmrLift.Enabled = True
+	isLifting = True ' Set the lifting flag to true
+End Sub
+
+Sub btnLiftUp_Up
+	currentLiftCommand = ""
+	tmrLift.Enabled = False
+	isLifting = False ' Set the lifting flag to false
+End Sub
+
+Sub btnLiftDown_Down
+	If isLifting Then Return ' If rotating is in progress, ignore lifting
+	currentLiftCommand = "Lift Down"
+	SendUDP(currentLiftCommand) ' Send immediately on button press
+	tmrLift.Enabled = True
+	isLifting = True ' Set the lifting flag to true
+End Sub
+
+Sub btnLiftDown_Up
+	currentLiftCommand = ""
+	tmrLift.Enabled = False
+	isLifting = False ' Set the lifting flag to false
+End Sub
+
+Sub tmrLift_Tick
+	If currentLiftCommand <> "" Then
+		SendUDP(currentLiftCommand) ' Send command during tick if needed
+	End If
+End Sub
+
+Sub tmrRotate_Tick
+	SendUDP(GetCurrentJoystickUDP) ' Continuously send UDP while rotating
+End Sub
+
+Sub Activity_Resume
+	tmrLift.Enabled = False
+	tmrRotate.Enabled = False
+	currentLiftCommand = ""
+	isLifting = False
+	isRotating = False
+End Sub
+
+Sub toggleGripper_CheckedChange(Checked As Boolean)
+	If Checked Then
+		SendUDP("Open Gripper")
+	Else
+		SendUDP("Close Gripper")
+	End If
+End Sub
+
+'Apply new Raspberry Pi IP and port, and reload the video stream
+Sub btnSetIP_Click
+	RPiIP = txtRPiIP.Text
+	Try
+		RPiPort = udpPort.Text
+	Catch
+		RPiPort = 5000
+	End Try
+	cameraStreamView.JavaScriptEnabled = True
+	cameraStreamView.LoadUrl("http://" & RPiIP & ":8080/?action=stream")
+End Sub
+
+Sub SendUDP(msg As String)
+	If UDP.IsInitialized = False Then Return
+	Dim packet As UDPPacket
+	packet.Initialize(msg.GetBytes("UTF8"), RPiIP, RPiPort)
+	UDP.Send(packet)
+	Log("UDP Sent: " & msg)
+End Sub
+
+Sub GetCurrentJoystickUDP As String
+	Dim angle As Int
+	Dim cont_Power As Int
+    
+	Try
+		angle = l4.Text.Trim
+		cont_Power = l5.Text.Trim
+		angle = angle.As(Int)
+		cont_Power = cont_Power.As(Int)
+	Catch
+		angle = 0
+		cont_Power = 0
+	End Try
+	Return angle & "," & cont_Power & "," & rot_value
+End Sub
+
+Sub reload_web_Click
+	cameraStreamView.LoadUrl("http://" & RPiIP & ":8080/?action=stream")
+End Sub
